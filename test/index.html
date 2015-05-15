@@ -1,0 +1,67 @@
+<!doctype html>
+
+<html>
+    
+    <head>
+        
+        <title>Backbone.Styles</title>
+
+        <script src="../bower_components/jquery/dist/jquery.min.js"></script>
+        <script src="../bower_components/underscore/underscore-min.js"></script>
+        <script src="../bower_components/backbone/backbone-min.js"></script>
+        <script src="../src/backbone.styles.js"></script>
+
+    </head>
+
+    <body class="test">
+
+        <script>
+
+            var V1 = Backbone.View.extend({
+
+                "className": "view-1",
+
+                "styles": {
+                    "background-color": "salmon",
+                    "float": "left",
+                    "height": "300px",
+                    "width": "300px"
+                }
+
+            });
+
+            var V2 = Backbone.View.extend({
+
+                "className": "view-2",
+
+                "initialize": function() {
+                    this.$el.append('<h1>This is a test</h1>');
+                },
+
+                "styles": {
+                    "background-color": "black",
+                    "float": "right",
+                    "height": "600px",
+                    "width": "200px",
+                    "h1": {
+                        "color": "white",
+                        "font-family": "Helvetica, Open Sans"
+                    },
+                    "&:hover": {
+                        "background-color": "orange"
+                    }
+                }
+
+            });
+
+            $(function() {
+                $(document.body).append(new V1().el, new V2().el);
+                $(document.body).append('<div class="container"></div>');
+                $('.container').append(new V2().el);
+            });
+
+        </script>
+
+    </body>
+
+</html>

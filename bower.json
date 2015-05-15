@@ -1,0 +1,20 @@
+{
+  "name": "backbone.styles",
+  "version": "0.0.0",
+  "homepage": "https://github.com/kurtpeters/backbone.styles",
+  "authors": [
+    "kpeters <kurt_peters@discovery.com>"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "devDependencies": {
+    "backbone": "~1.2.0",
+    "jquery": "~2.1.4"
+  }
+}
