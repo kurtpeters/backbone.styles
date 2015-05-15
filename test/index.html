@@ -17,15 +17,33 @@
 
         <script>
 
+            Backbone.Styles.registerMixin('test', function(color) {
+                return {
+                    "color": color
+                };
+            });
+
+            Backbone.Styles.registerMixin('test2', {
+                "background": "green"
+            });
+
             var V1 = Backbone.View.extend({
 
                 "className": "view-1",
+
+                "initialize": function() {
+                    this.$el.append('<h1>SALMON ON HOVER</h1>');
+                },
 
                 "styles": {
                     "background-color": "salmon",
                     "float": "left",
                     "height": "300px",
-                    "width": "300px"
+                    "width": "300px",
+                    "&:hover": {
+                        "@mixin:test2": "()",
+                        "@mixin:test": "(salmon)"
+                    }
                 }
 
             });

@@ -16,9 +16,7 @@
     _.extend(Styles.prototype, {
 
         "initialize": function() {
-            this.mixins = {};
-            this.extend = {};
-            this.attributes = {};
+            this.mixinRules = {};
             this.injectStyleSheet();
         },
 
@@ -41,7 +39,48 @@
             }
         },
 
-        "route": function(rules, parent, el) {
+        "generateCSS": function(jscss, parent) {
+            var rules = '';
+            // if parent exist, remove and add as prefix to current selector
+            if (jscss['@parent']) {
+                parent = jscss['@parent'] + ' ' + parent;
+                jscss = _(jscss).omit('@parent');
+                return this.generateCSS(jscss, parent);
+            }
+            _(jscss).each(function(rule, property) {
+                if (/^@mixin/.test(property)) {
+                    rules += this.generateCSS(this.useMixin(property, rule), parent);
+                    return;
+                }
+                if (_.isObject(rule)) {
+                    this.processFromJSCSS(rule, parent, property);
+                    return;
+                }
+                rules += property + ':' + rule + ';';
+            }, this);
+            return rules;
+        },
+
+        "useMixin": function(mixin, args) {
+            mixin = this.mixinRules[mixin.replace(/^@mixin:/, '')];
+            args = args.replace(/\s+|\(|\)/g, '').split(',');
+            if (!args[0]) {
+                args = [];
+            }
+            if (!mixin) {
+                return '';
+            }
+            return _.isFunction(mixin) ? mixin.apply(this, args) : mixin;
+        },
+
+        "process": function(jscss, parent) {
+            var rules = this.generateCSS(jscss, parent);
+            if (rules) {
+                this.sheet.addRule(parent, rules);
+            }
+        },
+
+        "processFromJSCSS": function(rules, parent, el) {
             if (/^&/.test(el)) {
                 return this.process(rules, parent + el.replace('&', ''));
             }
@@ -52,24 +91,6 @@
                 // inline styles
             }
             this.process(rules, parent ? parent + ' ' + el : el);
-        },
-
-        "process": function(jscss, parent) {
-            var rules = '';
-            if (jscss['@parent']) {
-                parent = jscss['@parent'] + ' ' + parent;
-                jscss = _(jscss).omit('@parent');
-                return this.process(jscss, parent);
-            }
-            _(jscss).each(function(rule, property) {
-                if (rule instanceof Object) {
-                    return this.route(rule, parent, property);
-                }
-                rules += property + ':' + rule + ';';
-            }, this);
-            if (rules) {
-                this.sheet.addRule(parent, rules);
-            }
         },
 
         "processFromView": function(view) {
@@ -100,16 +121,8 @@
 
     _.extend(Backbone.Styles, {
 
-        "mxn": function() {
-
-        },
-
-        "ext": function() {
-
-        },
-
-        "set": function() {
-
+        "registerMixin": function(mixinRule, value) {
+            styles.mixinRules[mixinRule] = value;
         }
 
     });
