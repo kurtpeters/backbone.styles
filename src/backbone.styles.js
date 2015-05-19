@@ -17,6 +17,7 @@
 
         "initialize": function() {
             this.mixinRules = {};
+            this.virtualStyleSheet = {};
             this.injectStyleSheet();
         },
 
@@ -39,15 +40,23 @@
             }
         },
 
-        "generateCSS": function(jscss, parent) {
+        "extractChildSelectors": function(jscss, selector) {
+            var vss = {};
+            _(jscss).each(function(rule, property) {
+                if (_.isObject(rule)) {
+                    this.processFromJSCSS(rule, selector, property);
+                    return;
+                }
+                vss[property] = rule;
+            }, this);
+            return vss;
+        },
+
+        "generateCSS": function(jscss, selector) {
             var rules = '';
             _(jscss).each(function(rule, property) {
                 if (/^@mixin/.test(property)) {
-                    rules += this.generateCSS(this.useMixin(property, rule), parent);
-                    return;
-                }
-                if (_.isObject(rule)) {
-                    this.processFromJSCSS(rule, parent, property);
+                    this.process(this.useMixin(property, rule), selector);
                     return;
                 }
                 rules += property + ':' + rule + ';';
@@ -67,21 +76,33 @@
             return _.isFunction(mixin) ? mixin.apply(this, args) : mixin;
         },
 
-        "process": function(jscss, parent) {
+        "process": function(jscss, selector) {
             // if parent exist, remove and add as prefix to current selector
             if (jscss['@parent']) {
-                parent = jscss['@parent'] + ' > ' + parent;
+                selector = jscss['@parent'] + ' > ' + selector;
                 jscss = _(jscss).omit('@parent');
             }
-            var rules = this.generateCSS(jscss, parent);
-            if (rules) {
-                this.sheet.addRule(parent, rules);
+
+            var rules = this.extractChildSelectors(jscss, selector),
+                vss = this.virtualStyleSheet[selector],
+                css;
+
+            if (_.isEqual(rules, vss)) {
+                return;
+            }
+
+            rules = _.extend(rules, vss);
+            css = this.generateCSS(rules, selector);
+
+            if (css) {
+                this.virtualStyleSheet[selector] = rules;
+                this.sheet.addRule(selector, css);
             }
         },
 
-        "processFromJSCSS": function(rules, parent, el) {
+        "processFromJSCSS": function(rules, selector, el) {
             if (/^&/.test(el)) {
-                return this.process(rules, parent + el.replace('&', ''));
+                return this.process(rules, selector + el.replace('&', ''));
             }
             if (/^@root/.test(el)) {
                 return this.process(rules);
@@ -89,7 +110,7 @@
             if (/^@el/.test(el)) {
                 // inline styles
             }
-            this.process(rules, parent ? parent + ' ' + el : el);
+            this.process(rules, selector ? selector + ' ' + el : el);
         },
 
         "processFromView": function(view) {
@@ -123,6 +144,10 @@
 
         "registerMixin": function(mixinRule, value) {
             styles.mixinRules[mixinRule] = value;
+        },
+
+        "toJSON": function() {
+            return _.clone(styles.virtualStyleSheet);
         }
 
     });
