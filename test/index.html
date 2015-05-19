@@ -41,13 +41,14 @@
 
                 "styles": function() {
                     return {
-                        "background-color": "salmon",
+                        "$color": "salmon",
+                        "background-color": "$color",
                         "float": "left",
                         "height": "300px",
                         "width": "300px",
                         "&:hover": {
                             "@mixin:test2": "()",
-                            "@mixin:test": "(salmon)",
+                            "@mixin:test": "($color)",
                             "cursor": "pointer"
                         }
                     };

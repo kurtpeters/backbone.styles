@@ -83,6 +83,45 @@ $(document.body).append(new View());
 </body>
 ```
 
+##$variables
+
+#### JavaScript
+```js
+var View = Backbone.View.extend({
+
+    "tagName": "section",
+
+    "styles": {
+        "$color": "#dadada",
+        "background-color": "$color"
+    }
+
+});
+
+$(document.body).append(new View());
+```
+
+#### HTML
+```html
+<head>
+
+    <style id="backbone-styles" type="text/css">
+
+        section {
+            color: #dadada
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+    <section></section>
+
+</body>
+```
+
 ##@mixin
 
 #### JavaScript

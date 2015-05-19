@@ -17,6 +17,7 @@
 
         "initialize": function() {
             this.mixinRules = {};
+            this.variables = {};
             this.virtualStyleSheet = {};
             this.injectStyleSheet();
         },
@@ -47,6 +48,10 @@
                     this.processFromJSCSS(rule, selector, property);
                     return;
                 }
+                if (/^\$/.test(property)) {
+                    this.variables[property.replace('$', '')] = rule;
+                    return;
+                }
                 vss[property] = rule;
             }, this);
             return vss;
@@ -61,7 +66,7 @@
                 }
                 rules += property + ':' + rule + ';';
             }, this);
-            return rules;
+            return this.interpolate(rules);
         },
 
         "useMixin": function(mixin, args) {
@@ -74,6 +79,16 @@
                 return '';
             }
             return _.isFunction(mixin) ? mixin.apply(this, args) : mixin;
+        },
+
+        "interpolate": function(rules) {
+            var regexp = /\$((\w|\-|\_)+)/g;
+            if (regexp.test(rules)) {
+                rules = rules.replace(regexp, _.bind(function(variable, match) {
+                    return this.variables[match] || variable;
+                }, this));
+            }
+            return rules;
         },
 
         "process": function(jscss, selector) {
@@ -91,7 +106,7 @@
                 return;
             }
 
-            rules = _.extend(vss, rules);
+            rules = _.extend({}, vss, rules);
             css = this.generateCSS(rules, selector);
 
             if (css) {
@@ -144,6 +159,16 @@
 
         "registerMixin": function(mixinRule, value) {
             styles.mixinRules[mixinRule] = value;
+        },
+
+        "$": function(name, value) {
+            var variables = {};
+            if (_.isString(name)) {
+                variables[name] = value;
+            } else {
+                variables = name;
+            }
+            _.extend(styles.variables, variables);
         },
 
         "toJSON": function() {
