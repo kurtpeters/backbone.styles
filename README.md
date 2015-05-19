@@ -1,11 +1,11 @@
 # backbone.styles
 Backbone.Styles brings CSS prepossessing to JS development. This library is in the process of development. The following documentation is pseudo code outlining current functionality of the software.
 
-## Backbone.Styles
+## Backbone.Styles()
 
 #### JavaScript
 ```js
-Backbone.Styes({
+Backbone.Styles({
 
     ".container": {
         "margin": "0 auto",
