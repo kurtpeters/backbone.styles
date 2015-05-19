@@ -91,7 +91,7 @@
                 return;
             }
 
-            rules = _.extend(rules, vss);
+            rules = _.extend(vss, rules);
             css = this.generateCSS(rules, selector);
 
             if (css) {
