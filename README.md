@@ -108,7 +108,7 @@ $(document.body).append(new View());
     <style id="backbone-styles" type="text/css">
 
         section {
-            color: #dadada
+            background-color: #dadada
         }
 
     </style>
