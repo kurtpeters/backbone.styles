@@ -1,7 +1,45 @@
 # backbone.styles
 Backbone.Styles brings CSS prepossessing to JS development. This library is in the process of development. The following documentation is pseudo code outlining current functionality of the software.
 
-## Usage
+## Backbone.Styles
+
+#### JavaScript
+```js
+Backbone.Styes({
+
+    ".container": {
+        "margin": "0 auto",
+        "padding": "1rem",
+        "width": "1200px"
+    }
+
+});
+```
+
+#### HTML
+```html
+<head>
+
+    <style id="backbone-styles" type="text/css">
+
+        .container {
+            margin: 0 auto;
+            padding: 1rem;
+            width: 1200px;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+    ...
+
+</body>
+```
+
+## Backbone.View.prototype.styles
 
 #### JavaScript
 ```js
@@ -196,4 +234,12 @@ $('.list').append(new View());
     </ul>
 
 </body>
+```
+
+##toJSON
+
+Return current list of styles in `Object` format.
+
+```js
+var styles = Backbone.Styles.toJSON();
 ```
