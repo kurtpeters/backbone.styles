@@ -41,12 +41,6 @@
 
         "generateCSS": function(jscss, parent) {
             var rules = '';
-            // if parent exist, remove and add as prefix to current selector
-            if (jscss['@parent']) {
-                parent = jscss['@parent'] + ' ' + parent;
-                jscss = _(jscss).omit('@parent');
-                return this.generateCSS(jscss, parent);
-            }
             _(jscss).each(function(rule, property) {
                 if (/^@mixin/.test(property)) {
                     rules += this.generateCSS(this.useMixin(property, rule), parent);
@@ -74,6 +68,11 @@
         },
 
         "process": function(jscss, parent) {
+            // if parent exist, remove and add as prefix to current selector
+            if (jscss['@parent']) {
+                parent = jscss['@parent'] + ' > ' + parent;
+                jscss = _(jscss).omit('@parent');
+            }
             var rules = this.generateCSS(jscss, parent);
             if (rules) {
                 this.sheet.addRule(parent, rules);
@@ -94,11 +93,12 @@
         },
 
         "processFromView": function(view) {
-            var className = view.className ? '.' + view.className.replace(/\s+/g, '.') : void 0,
+            var className = view.className ? '.' + view.className.replace(/\s+/g, '.') : '',
                 jscss = {},
-                selector = view.tagName + className;
-            jscss[selector] = view.styles;
-            this.process(jscss);
+                selector = view.tagName + className,
+                viewStyles = view.styles;
+            jscss = _.isFunction(viewStyles) ? viewStyles.call(view) : viewStyles;
+            this.process(jscss, selector);
         }
 
     });

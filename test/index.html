@@ -31,19 +31,26 @@
 
                 "className": "view-1",
 
+                "attributes": {
+                    "id": 'test'
+                },
+
                 "initialize": function() {
                     this.$el.append('<h1>SALMON ON HOVER</h1>');
                 },
 
-                "styles": {
-                    "background-color": "salmon",
-                    "float": "left",
-                    "height": "300px",
-                    "width": "300px",
-                    "&:hover": {
-                        "@mixin:test2": "()",
-                        "@mixin:test": "(salmon)"
-                    }
+                "styles": function() {
+                    return {
+                        "background-color": "salmon",
+                        "float": "left",
+                        "height": "300px",
+                        "width": "300px",
+                        "&:hover": {
+                            "@mixin:test2": "()",
+                            "@mixin:test": "(salmon)",
+                            "cursor": "pointer"
+                        }
+                    };
                 }
 
             });
@@ -57,6 +64,7 @@
                 },
 
                 "styles": {
+                    "@parent": ".container",
                     "background-color": "black",
                     "float": "right",
                     "height": "600px",
