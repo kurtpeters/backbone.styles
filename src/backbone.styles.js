@@ -1,6 +1,21 @@
-(function() {
+(function (factory) {
+    'use strict';
+    if (typeof define === 'function' && typeof define.amd === 'object') {
+        define(['underscore', 'backbone'], function (_, Backbone) {
+            factory(_, Backbone);
+        });
+    } else if (typeof module !== 'undefined' && module.exports) {
+        var _ = require('underscore'),
+            Backbone = require('backbone');
+        module.exports = factory.bind(null, _, Backbone);
+    } else if (typeof window !== 'undefined') {
+        factory();
+    }
+})(function(_, Backbone) {
 
     'use strict';
+    _ = _ || window._;
+    Backbone = Backbone || window.Backbone;
 
     function _addRule(selectorText, cssText, index) {
         if (index === void 0) {
@@ -177,4 +192,4 @@
 
     });
 
-})();
+});
