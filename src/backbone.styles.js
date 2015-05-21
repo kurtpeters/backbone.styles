@@ -17,6 +17,8 @@
 
         "initialize": function() {
             this.mixinRules = {};
+            this.variables = {};
+            this.virtualStyleSheet = {};
             this.injectStyleSheet();
         },
 
@@ -39,26 +41,32 @@
             }
         },
 
-        "generateCSS": function(jscss, parent) {
-            var rules = '';
-            // if parent exist, remove and add as prefix to current selector
-            if (jscss['@parent']) {
-                parent = jscss['@parent'] + ' ' + parent;
-                jscss = _(jscss).omit('@parent');
-                return this.generateCSS(jscss, parent);
-            }
+        "extractChildSelectors": function(jscss, selector) {
+            var vss = {};
             _(jscss).each(function(rule, property) {
-                if (/^@mixin/.test(property)) {
-                    rules += this.generateCSS(this.useMixin(property, rule), parent);
+                if (_.isObject(rule)) {
+                    this.processFromJSCSS(rule, selector, property);
                     return;
                 }
-                if (_.isObject(rule)) {
-                    this.processFromJSCSS(rule, parent, property);
+                if (/^\$/.test(property)) {
+                    this.variables[property.replace('$', '')] = rule;
+                    return;
+                }
+                vss[property] = rule;
+            }, this);
+            return vss;
+        },
+
+        "generateCSS": function(jscss, selector) {
+            var rules = '';
+            _(jscss).each(function(rule, property) {
+                if (/^@mixin/.test(property)) {
+                    this.process(this.useMixin(property, rule), selector);
                     return;
                 }
                 rules += property + ':' + rule + ';';
             }, this);
-            return rules;
+            return this.interpolate(rules);
         },
 
         "useMixin": function(mixin, args) {
@@ -73,16 +81,43 @@
             return _.isFunction(mixin) ? mixin.apply(this, args) : mixin;
         },
 
-        "process": function(jscss, parent) {
-            var rules = this.generateCSS(jscss, parent);
-            if (rules) {
-                this.sheet.addRule(parent, rules);
+        "interpolate": function(rules) {
+            var regexp = /\$((\w|\-|\_)+)/g;
+            if (regexp.test(rules)) {
+                rules = rules.replace(regexp, _.bind(function(variable, match) {
+                    return this.variables[match] || variable;
+                }, this));
+            }
+            return rules;
+        },
+
+        "process": function(jscss, selector) {
+            // if parent exist, remove and add as prefix to current selector
+            if (jscss['@parent']) {
+                selector = jscss['@parent'] + ' > ' + selector;
+                jscss = _(jscss).omit('@parent');
+            }
+
+            var rules = this.extractChildSelectors(jscss, selector),
+                vss = this.virtualStyleSheet[selector],
+                css;
+
+            if (_.isEqual(rules, vss)) {
+                return;
+            }
+
+            rules = _.extend({}, vss, rules);
+            css = this.generateCSS(rules, selector);
+
+            if (css) {
+                this.virtualStyleSheet[selector] = rules;
+                this.sheet.addRule(selector, css);
             }
         },
 
-        "processFromJSCSS": function(rules, parent, el) {
+        "processFromJSCSS": function(rules, selector, el) {
             if (/^&/.test(el)) {
-                return this.process(rules, parent + el.replace('&', ''));
+                return this.process(rules, selector + el.replace('&', ''));
             }
             if (/^@root/.test(el)) {
                 return this.process(rules);
@@ -90,15 +125,16 @@
             if (/^@el/.test(el)) {
                 // inline styles
             }
-            this.process(rules, parent ? parent + ' ' + el : el);
+            this.process(rules, selector ? selector + ' ' + el : el);
         },
 
         "processFromView": function(view) {
-            var className = view.className ? '.' + view.className.replace(/\s+/g, '.') : void 0,
+            var className = view.className ? '.' + view.className.replace(/\s+/g, '.') : '',
                 jscss = {},
-                selector = view.tagName + className;
-            jscss[selector] = view.styles;
-            this.process(jscss);
+                selector = view.tagName + className,
+                viewStyles = view.styles;
+            jscss = _.isFunction(viewStyles) ? viewStyles.call(view) : viewStyles;
+            this.process(jscss, selector);
         }
 
     });
@@ -123,6 +159,20 @@
 
         "registerMixin": function(mixinRule, value) {
             styles.mixinRules[mixinRule] = value;
+        },
+
+        "$": function(name, value) {
+            var variables = {};
+            if (_.isString(name)) {
+                variables[name] = value;
+            } else {
+                variables = name;
+            }
+            _.extend(styles.variables, variables);
+        },
+
+        "toJSON": function() {
+            return _.clone(styles.virtualStyleSheet);
         }
 
     });
